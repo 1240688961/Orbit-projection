@@ -75,6 +75,7 @@ if __name__ == '__main__':
     # Set the legend
     ax.scatter(10000, 10000, s=240, c='red', edgecolor='none', alpha=1.0, label='Ni-dxz_up')
     ax.scatter(10000, 10000, s=240, c='skyblue', edgecolor='none', alpha=1.0, label='Ni-dxz_down')
+
  ```
     font1 = {'weight': 'normal', 'size': 20}
     legend = plt.legend(prop=font1)
@@ -83,8 +84,6 @@ if __name__ == '__main__':
     plt.show()
 ```
 
-
- ```
  这下面段话表示将矢量图转换成png格式的图片，必要去掉注释就行
  ```
 os.system("convert -density 288 band.eps band.png")
@@ -92,4 +91,3 @@ os.system("convert -density 288 band.eps band.png")
 当然如果投影的原子很多，在i的变量上写个循环就可以了  
 不过速度很慢  
 当然也可以根据需要进行优化  
-
