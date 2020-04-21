@@ -13,10 +13,10 @@ PROCAR里面是包含了投影的结果
 ./result.py
 ```
 
-下面讲解下代码
-下面这些一定要填，reference_level，表示以哪个能级作为0势能参考点，
-kpath表示你在算band时的KPOINTS的路径
-y_axis_min，y_axis_max表示绘制出来的y轴范围
+下面讲解下代码    
+下面这些一定要填，reference_level，表示以哪个能级作为0势能参考点，   
+kpath表示你在算band时的KPOINTS的路径   
+y_axis_min，y_axis_max表示绘制出来的y轴范围   
 
 ```
 reference_level = -2.6880
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     i = 1
     procar_plt_up(i, dict1['dz2'], 1000, 'red')
     procar_plt_down(i, dict1['dz2'], 1000, 'skyblue')
-    ```
+ ```
     # Set the range of abscissa and ordinate
     plt.xlim(min(axis_x), max(axis_x))
     plt.ylim(y_axis_min, y_axis_max)
@@ -89,4 +89,7 @@ ax.scatter(10000, 10000, s=240, c='red', edgecolor='none', alpha=1.0, label='Ni-
  ```
 os.system("convert -density 288 band.eps band.png")
  ```
-   如需旋转y轴也是同理，这里不再展示
+当然如果投影的原子很多，在i的变量上写个循环就可以了  
+不过速度很慢  
+当然也可以根据需要进行优化  
+
