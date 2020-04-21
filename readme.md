@@ -69,11 +69,13 @@ if __name__ == '__main__':
     plt.yticks(np.arange(y_axis_min, y_axis_max, 0.2), size=25)
     # Set the xlabel and xylabel  and title
     # plt.ylabel("E-E_VBM(eV)", size=25)
-
+```
+    这下面段话表示，用于右上角的图注,s表示图注的大小，alpha表示透明度，label就是图注中的文字
+```
     # Set the legend
     ax.scatter(10000, 10000, s=240, c='red', edgecolor='none', alpha=1.0, label='Ni-dxz_up')
     ax.scatter(10000, 10000, s=240, c='skyblue', edgecolor='none', alpha=1.0, label='Ni-dxz_down')
-
+ ```
     font1 = {'weight': 'normal', 'size': 20}
     legend = plt.legend(prop=font1)
     plt.savefig('band.eps')
@@ -81,9 +83,7 @@ if __name__ == '__main__':
     plt.show()
 ```
 
-这下面段话表示，用于右上角的图注，alpha表示透明度，label就是图注中的文字
-```
-ax.scatter(10000, 10000, s=240, c='red', edgecolor='none', alpha=1.0, label='Ni-dxz_up')
+
  ```
  这下面段话表示将矢量图转换成png格式的图片，必要去掉注释就行
  ```
