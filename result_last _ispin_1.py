@@ -68,42 +68,6 @@ def get_band_range_up(ycoordinate_min, ycoordinate_max, ref_level):
     return band_range_min, band_range_max
 
 
-def get_band_range_down(ycoordinate_min, ycoordinate_max, ref_level):
-    ycoor_max = float(ycoordinate_max + ref_level)
-    ycoor_min = float(ycoordinate_min + ref_level)
-    band_max = []
-    band_min = []
-    # Get the data from EIGENVAL
-    rf = open('EIGENVAL', 'r')
-    for i in range(0, 5):  # Skip the beginning of EIGENVAL 5 lines
-        rf.readline()
-    # Read the bands kpoints
-    str1 = rf.readline()
-    bands = int(str1.split()[2])
-    kpoints = int(str1.split()[1])
-    rf.readline()  # Skip the line
-    # Read the band data
-    for i in range(0, kpoints):
-        rf.readline()  # Skip the line
-        band_range = []
-        for j in range(0, bands):
-            str2 = rf.readline()
-            band_data = float(str2.split()[2])
-            if ycoor_max >= band_data >= ycoor_min:
-                band_range.append(int(str2.split()[0]))
-        rf.readline()  # Skip the line
-        if band_range:              # Determine whether the array is empty, this is sometimes empty
-            band_max.append(max(band_range))
-            band_min.append(min(band_range))
-    if band_max:              # Determine whether the array is empty, this is sometimes empty
-        band_range_min = min(band_min)
-        band_range_max = max(band_max)
-    else:
-        band_range_min = 1
-        band_range_max = bands
-    return band_range_min, band_range_max
-
-
 def get_small_PROCAR(startband, endband):
     # Open the file and read the cooresponding parameters
     rf = open('PROCAR', 'r')
@@ -182,7 +146,7 @@ def get_small_EIGENVAL(startband, endband):
     wf.close()
 
 
-def get_cbm_vbm(band_up, band_down):
+def get_cbm_vbm(band_up):
     cbm_all = []
     vbm_all = []
     for i in range(band_up.shape[0]):
@@ -191,13 +155,6 @@ def get_cbm_vbm(band_up, band_down):
                 cbm_all.append(band_up[i, j])
             else:
                 vbm_all.append(band_up[i, j])
-
-    for i in range(band_down.shape[0]):
-        for j in range(band_down.shape[1]):
-            if band_down[i, j] > 0:
-                cbm_all.append(band_down[i, j])
-            else:
-                vbm_all.append(band_down[i, j])
 
     return min(cbm_all), max(vbm_all)
 
@@ -214,17 +171,15 @@ def read_EIGENVAL(ref_level, filename):
     rf.readline()  # Skip the line
     # Read the band data
     axis_up = [[0 for i in range(kpoints)] for i in range(bands)]
-    axis_down = [[0 for i in range(kpoints)] for i in range(bands)]
     for i in range(0, kpoints):
         rf.readline()  # Skip the blank line
         for j in range(0, bands):
             str2 = rf.readline()
             axis_up[j][i] = float(str2.split()[1]) - ref_level
-            axis_down[j][i] = float(str2.split()[2]) - ref_level
         rf.readline()  # Skip the black line
     rf.close()
     axis_up = np.array(axis_up)
-    axis_down = np.array(axis_down)
+
     # Delete duplicate data
     delline = []
     for i in range(0, kpoints - 1):
@@ -235,9 +190,9 @@ def read_EIGENVAL(ref_level, filename):
     delline.reverse()
     for j in delline:
         axis_up = np.delete(axis_up, j, 1)
-        axis_down = np.delete(axis_down, j, 1)
+
     kpoints = kpoints - len(delline)
-    return bands, kpoints, axis_up, axis_down, delline
+    return bands, kpoints, axis_up,  delline
 
 
 def read_PROCAR_up(atom, orbit):
@@ -249,40 +204,6 @@ def read_PROCAR_up(atom, orbit):
     pro_bands = int(str1.split()[7])
     pro_ions = int(str1.split()[11])
     rf.readline()
-
-    # Get the data
-    pro_data = [[0 for i in range(pro_kpoints)] for i in range(pro_bands)]
-    for i in range(0, pro_kpoints):
-        for m in range(0, 2):  # Skip the line k-point
-            rf.readline()
-        for j in range(0, pro_bands):
-            for m in range(0, atom + 2):  # Skip the line-start
-                rf.readline()
-            str2 = rf.readline()
-            pro_data[j][i] = float(str2.split()[orbit])
-            for n in range(0, (pro_ions + 5) - (atom + 2) - 1):  # Skip the line-end
-                rf.readline()
-        rf.readline()
-    rf.close()
-    pro_data = np.array(pro_data)
-    # Delete duplicate data
-    for j in delline:
-        pro_data = np.delete(pro_data, j, 1)
-    return pro_data
-
-
-def read_PROCAR_down(atom, orbit):
-    rf = open('newprocar', 'r')
-    # Get the bands kpoints ions
-    rf.readline()
-    str1 = rf.readline()
-    pro_kpoints = int(str1.split()[3])
-    pro_bands = int(str1.split()[7])
-    pro_ions = int(str1.split()[11])
-    rf.readline()
-
-    for i in range(0, pro_kpoints * (pro_bands * (pro_ions + 5) + 3) + 1):  # Skip the ispin-bands
-        rf.readline()
 
     # Get the data
     pro_data = [[0 for i in range(pro_kpoints)] for i in range(pro_bands)]
@@ -400,34 +321,6 @@ def get_plot_procar_axis_y_up(atom, orbit, procar_axis_x, bands, compress_radio,
     return procar_axis_y_up, procar_multiplied_up
 
 
-def get_plot_procar_axis_y_down(atom, orbit, procar_axis_x, bands, compress_radio, kpt_insert_point):
-    old_procar_multiplied_down = read_PROCAR_down(atom, orbit)
-    procar_multiplied_down = [[0 for i in range(len(procar_axis_x))] for i in range(bands)]
-    procar_axis_y_down = [[0 for i in range(len(procar_axis_x))] for i in range(bands)]
-    k = int(0)  # The k means how many segments there are
-    n = int(0)  # The n means how many k points are there
-
-    for i in compress_radio:
-        # A certain segment kpoint
-        for j in range(0, kpt_insert_point):
-            if j * i <= kpt_insert_point:
-                for m in range(0, bands):  # The m is the each band
-                    procar_multiplied_down[m][n] = old_procar_multiplied_down[m, j * i + k * kpt_insert_point]
-                    procar_axis_y_down[m][n] = axis_down[m, j * i + k * kpt_insert_point]
-                n = n + 1
-        k = k + 1
-
-    # Add the data from the last row
-    for m in range(0, bands):
-        procar_multiplied_down[m][-1] = old_procar_multiplied_down[m, -1]
-        procar_axis_y_down[m][-1] = axis_down[m, -1]
-
-    procar_axis_y_down = np.array(procar_axis_y_down)
-    procar_multiplied_down = np.array(procar_multiplied_down)
-
-    return procar_axis_y_down, procar_multiplied_down
-
-
 def band_plot_up(bands, axis_x, axis_y_up, delline):
     # Plot bands
     for i in range(0, bands):
@@ -456,12 +349,6 @@ def band_plot_up(bands, axis_x, axis_y_up, delline):
         plt.xticks(xlocs, kpath, size=25)
 
 
-def band_plot_down(bands, axis_x, axis_y_down):
-    # Plot bands
-    for i in range(0, bands):
-        plt.plot(axis_x, axis_y_down[i, :], color='black', linewidth=1.0, linestyle="-")
-
-
 def procar_plt_up(ion, orb, mult, dotcolor):
     pro_axis_up, pro_data_up = get_plot_procar_axis_y_up(ion, orb, procar_axis_x, bands, compress_radio, kpt_insert_point)
     for i in range(0, len(procar_axis_x)):
@@ -470,16 +357,6 @@ def procar_plt_up(ion, orb, mult, dotcolor):
             # Plot the bands
             ax.scatter(procar_axis_x[i], pro_axis_up[j, i], s=pro_data_up[j, i] * mult, c=dotcolor, edgecolor='none',
                        alpha=1.0)
-
-
-def procar_plt_down(ion, orb, mult, dotcolor):
-    pro_axis_down, pro_data_down = get_plot_procar_axis_y_down(ion, orb, procar_axis_x, bands, compress_radio, kpt_insert_point)
-    for i in range(0, len(procar_axis_x)):
-        # Plot the kpoints
-        for j in range(0, bands):
-            # Plot the bands
-            ax.scatter(procar_axis_x[i], pro_axis_down[j, i], s=pro_data_down[j, i] * mult, c=dotcolor,
-                       edgecolor='none', alpha=1.0)
 
 
 def blend_tow_images(figure1, figure2):
@@ -493,18 +370,16 @@ def blend_tow_images(figure1, figure2):
 
 
 if __name__ == '__main__':
-    temp_bands, temp_kpoints, temp_axis_up, temp_axis_down, temp_delline = read_EIGENVAL(reference_level, 'EIGENVAL')  # Get temporary bands data
-    cbm, vbm = get_cbm_vbm(temp_axis_up, temp_axis_down)  # Get the vbm and cbm
-    start_band_up, end_band_up = get_band_range_up(y_axis_min, y_axis_max, reference_level)  # Get the required bands range from the drawing
-    start_band_down, end_band_down = get_band_range_down(y_axis_min, y_axis_max, reference_level)
-    start_band = min(start_band_up, start_band_down)
-    end_band = max(end_band_up, end_band_down)
+    temp_bands, temp_kpoints, temp_axis_up,  temp_delline = read_EIGENVAL(reference_level, 'EIGENVAL')  # Get temporary bands data
+    cbm, vbm = get_cbm_vbm(temp_axis_up)  # Get the vbm and cbm
+    start_band, end_band = get_band_range_up(y_axis_min, y_axis_max, reference_level)  # Get the required bands range from the drawing
+
     get_small_EIGENVAL(start_band, end_band)  # Get minified EIGENVAL file
     get_small_PROCAR(start_band, end_band)  # Get minified PROCAR file
-    bands, kpoints, axis_up, axis_down, delline = read_EIGENVAL(reference_level, 'neweigenval')  # Get bands data
+    bands, kpoints, axis_up,  delline = read_EIGENVAL(reference_level, 'neweigenval')  # Get bands data
     axis_x, compress_radio, kpt_insert_point = get_new_axis_x(delline)  # Get reduced abscissa data
     list_axis_x = list(enumerate(axis_x))
-    ######### Plot the band
+
     fig = plt.figure(figsize=(8, 10))  # Canvas initialization and set size
 
     # Plot the procar_data
@@ -512,13 +387,11 @@ if __name__ == '__main__':
     procar_axis_x = get_plot_procar_axis_x(compress_radio, kpt_insert_point, list_axis_x, axis_x)
 
     band_plot_up(bands, axis_x, axis_up, delline)     # Plot the band up
-    band_plot_down(bands, axis_x, axis_down)          # Plot the band down
     # blue c green black magenta red white yellow
     dict1 = {'s': 1, 'py': 2, 'pz': 3, 'px': 4, 'dxy': 5, 'dyz': 6, 'dz2': 7, 'dxz': 8, 'dx2-y2': 9, 'tot': 10}
     # Plot the need orbit and atoms
     i = 1
     procar_plt_up(i, dict1['dz2'], 1000, 'red')
-    procar_plt_down(i, dict1['dz2'], 1000, 'skyblue')
 
     # Set the range of abscissa and ordinate
     plt.xlim(min(axis_x), max(axis_x))
@@ -529,7 +402,7 @@ if __name__ == '__main__':
 
     # Set the legend
     ax.scatter(10000, 10000, s=240, c='red', edgecolor='none', alpha=1.0, label='Ni-dxz_up')
-    ax.scatter(10000, 10000, s=240, c='skyblue', edgecolor='none', alpha=1.0, label='Ni-dxz_down')
+
 
     font1 = {'weight': 'normal', 'size': 20}
     legend = plt.legend(prop=font1)
