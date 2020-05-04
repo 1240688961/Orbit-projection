@@ -1,7 +1,9 @@
 这是我用python写的一个脚本,  
 可以用来做轨道投影，  
 PROCAR里面是包含了投影的结果  
-速度很慢，   
+速度很慢,我测试过代码  
+当绘制3600个点时, 90%的时间花费在scatter上  
+因此, 优化scatter是很难的  
 只能用来做考虑自旋的体系，即INCAR中，ISPIN=2    
 当然ISPIN=1时，稍微改下也能用   
 在做轨道投影时，可能会派上用处   
@@ -29,28 +31,8 @@ y_axis_max = 3
 
 ```
 if __name__ == '__main__':
-    temp_bands, temp_kpoints, temp_axis_up, temp_axis_down, temp_delline = read_EIGENVAL(reference_level, 'EIGENVAL')  # Get temporary bands data
-    cbm, vbm = get_cbm_vbm(temp_axis_up, temp_axis_down)  # Get the vbm and cbm
-    startband_up, endband_up = get_band_range_up(y_axis_min, y_axis_max, reference_level)  # Get the required bands range from the drawing
-    startband_down, endband_down = get_band_range_down(y_axis_min, y_axis_max, reference_level)
-    startband = min(startband_up, startband_down)
-    endband = max(endband_up, endband_down)
-    get_small_EIGENVAL(startband, endband)  # Get minified EIGENVAL file
-    get_small_PROCAR(startband, endband)  # Get minified PROCAR file
-    bands, kpoints, axis_up, axis_down, delline = read_EIGENVAL(reference_level, 'neweigenval')  # Get bands data
-    axis_x, compress_radio, kpt_insert_point = get_new_axis_x(delline)  # Get reduced abscissa data
-    list_axis_x = list(enumerate(axis_x))
-    ######### Plot the band
-    fig = plt.figure(figsize=(8, 10))  # Canvas initialization and set size
 
-    # Plot the procar_data
-    ax = fig.add_subplot(111)
-    procar_axis_x = get_plot_procar_axis_x(compress_radio, kpt_insert_point, list_axis_x, axis_x)
 
-    band_plot_up(bands, axis_x, axis_up, delline)     # Plot the band up
-    band_plot_down(bands, axis_x, axis_down)          # Plot the band down
-    # blue c green black magenta red white yellow
-    dict1 = {'s': 1, 'py': 2, 'pz': 3, 'px': 4, 'dxy': 5, 'dyz': 6, 'dz2': 7, 'dxz': 8, 'dx2-y2': 9, 'tot': 10}
     # Plot the need orbit and atoms
 
  ```
